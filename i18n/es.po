@@ -1,0 +1,47 @@
+#: init/wildfly.js
+msgid "CI Server not found"
+msgstr "Servidor CI no encontrado"
+
+#: public/form/wildfly-form.js
+msgid "Server"
+msgstr "Servidor"
+
+#: public/form/wildfly-form.js
+msgid "Path to WildFly script"
+msgstr "Ruta al script de WildFly"
+
+#: public/form/wildfly-form.js
+msgid "Functions"
+msgstr "Funciones"
+
+#: public/form/wildfly-form.js
+msgid "Configuration File"
+msgstr "Fichero de Configuración"
+
+#: public/form/wildfly-form.js
+msgid "Custom Params"
+msgstr "Parámetros Personalizados"
+
+#: public/form/wildfly-form.js
+msgid "File path to deploy"
+msgstr "Ruta del fichero a desplegar"
+
+#: public/form/wildfly-form.js
+msgid "Filename"
+msgstr "Nombre del fichero"
+
+#: public/form/wildfly-form.js
+msgid "Force deploy"
+msgstr "Forzar despliegue"
+
+#: public/form/wildfly-form.js
+msgid "Credentials"
+msgstr "Credenciales"
+
+#: public/form/wildfly-form.js
+msgid "Username"
+msgstr "Usuario"
+
+#: public/form/wildfly-form.js
+msgid "Password"
+msgstr "Contraseña"
