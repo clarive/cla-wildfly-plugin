@@ -81,8 +81,7 @@
         name: 'configfile',
         fieldLabel: _('Configuration File'),
         value: data.configfile || '',
-        hidden: true,
-        allowBlank: false
+        hidden: true
     });
     var customParams = Cla.ui.textField({
         name: 'customParams',
