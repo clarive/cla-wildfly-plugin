@@ -4,6 +4,42 @@ reg.register('service.wildfly.server', {
     name: 'WildFly Application Server',
     icon: '/plugin/cla-wildfly-plugin/icon/wildfly.svg',
     form: '/plugin/cla-wildfly-plugin/form/wildfly-form.js',
+    rulebook: {
+        moniker: 'wildfly_task',
+        description: _('Executes Wildfly commands'),
+        required: [ 'server', 'path', 'arg'],
+        allow: ['server', 'path', 'arg', 'configfile', 'custom_params', 'file', 
+        'filename', 'force', 'username', 'password', 'errors'],
+        mapper: {
+            'custom_params':'customParams',
+            'errors':'type'
+        },
+        examples: [{
+            wildfly_task: {
+                server: 'wildfly_server',
+                path: '/wildfly/bin/standalone.sh',
+                arg: 'start',
+                configfile: "/projects/standalone.xml"
+            }
+        },{
+            wildfly_task: {
+                server: 'wildfly_server',
+                path: '/wildfly/bin/standalone.sh',
+                arg: 'deploy',
+                username: "user",
+                password: "***",
+                file: '/tmp/example.war',
+                force: '0'
+            }
+        },{
+            wildfly_task: {
+                server: 'wildfly_server',
+                path: '/wildfly/bin/standalone.sh',
+                arg: 'undeploy',
+                filename: "file.war"
+            }
+        }]
+    },
     handler: function(ctx, params) {
         var ci = require("cla/ci");
         var log = require('cla/log');
@@ -70,6 +106,6 @@ reg.register('service.wildfly.server', {
                 rc_warn: params.warn
             }
         });
-        return output;
+        return output.output;
     }
 });
