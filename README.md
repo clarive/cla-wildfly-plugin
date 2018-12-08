@@ -1,6 +1,6 @@
 # WildFly Plugin
 
-<img src="https://cdn.rawgit.com/clarive/cla-wildfly-plugin/master/public/icon/wildfly.svg?sanitize=true" alt="Wildfly Plugin" title="Wildfly Plugin" width="120" height="120">
+<img src="https://cdn.jsdelivr.net/gh/clarive/cla-wildfly-plugin@master/public/icon/wildfly.svg?sanitize=true" alt="Wildfly Plugin" title="Wildfly Plugin" width="120" height="120">
 
 The WildFly plugin will allow you to interact with the WildFly server when performing and undoing deployments. It is
 compatible with Jboss 7 and later. 

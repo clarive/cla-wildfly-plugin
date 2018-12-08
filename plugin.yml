@@ -1,7 +1,7 @@
 name: WildFly Plugin
 description: The WildFly plugin will allow you to interact with the WildFly server when performing and undoing deployments.
 version: 1.0
-icon: https://cdn.rawgit.com/clarive/cla-wildfly-plugin/master/public/icon/wildfly.svg?sanitize=true
+icon: https://cdn.jsdelivr.net/gh/clarive/cla-wildfly-plugin@master/public/icon/wildfly.svg?sanitize=true
 url: https://github.com/clarive/cla-wildfly-plugin
 requires:
   - clarive_version: 6.8 <= version
