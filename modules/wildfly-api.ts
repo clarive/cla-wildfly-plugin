@@ -1,5 +1,4 @@
-declare var _;
-declare var require;
+declare var require, _;
 var reg = require('cla/reg');
 
 const rulebook = {
@@ -27,6 +26,7 @@ reg.register('service.wildfly.api', {
         const { processError } = require('libs.ts');
 
         const { server, requestBody } = params;
+        const title = params.meta?.text || 'Wildfly API';
         const errors = params.errors || 'fail';
 
         const wf = ci.load(server);
@@ -53,22 +53,25 @@ reg.register('service.wildfly.api', {
             });
 
             if (res.isSuccess()) {
+                log.info(`Wildfly: ${_('%1: task finished', title)}`, res);
                 return {
                     success: 1,
                     status: res.code(),
                     message: res.message()
                 };
             } else if (errors === 'return') {
+                log.error(`Wildfly: ${_('%1: task error', title)}`, res);
                 return {
                     success: 0,
                     status: res.code(),
                     message: res.message()
                 };
             } else {
-                console.log('Wildfly ERROR:', res);
+                log.error(`Wildfly: ${_('%1: task error', title)}`, res);
                 throw new Error(`Wildfly ERROR: status=${res.code()}`);
             }
         } catch (err) {
+            log.error(`Wildfly: ${_('%1: op error', title)}`, err);
             if (errors === 'return') {
                 return {
                     success: 0,
@@ -76,7 +79,6 @@ reg.register('service.wildfly.api', {
                     message: err + ''
                 };
             } else {
-                console.log('Wildfly ERROR:', err);
                 throw new Error(`Wildfly ERROR: ${err}`);
             }
         }
@@ -96,6 +98,7 @@ reg.register('service.wildfly.deploy', {
         const { processError } = require('libs.ts');
 
         const { server, localFile } = params;
+        const title = params.meta?.text || 'Wildfly Deploy';
         const errors = params.errors || 'fail';
         const remoteFile =
             params.remoteFile?.trim() || localFile.replace(/^.*\/(.+?)$/, '$1');
@@ -136,6 +139,7 @@ reg.register('service.wildfly.deploy', {
                 });
 
                 if (res2.isSuccess()) {
+                    log.info(`Wildfly: ${_('%1: task finished', title)}: ${res.message()}`, res);
                     return {
                         success: 1,
                         json,
@@ -149,7 +153,7 @@ reg.register('service.wildfly.deploy', {
                 throw res;
             }
         } catch (resErr) {
-            return processError(resErr, errors);
+            return processError(resErr, errors, title);
         }
     }
 });
@@ -167,6 +171,7 @@ reg.register('service.wildfly.undeploy', {
         const { processError } = require('libs.ts');
 
         const { server } = params;
+        const title = params.meta?.text || 'Wildfly Undeploy';
         const errors = params.errors || 'fail';
         const remoteFile = params.remoteFile?.trim();
 
@@ -215,7 +220,7 @@ reg.register('service.wildfly.undeploy', {
                 throw res;
             }
         } catch (resErr) {
-            return processError(resErr, errors);
+            return processError(resErr, errors, title);
         }
     }
 });
