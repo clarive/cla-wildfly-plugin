@@ -30,6 +30,11 @@ ci.createClass('WildflyServer', {
         }
     },
     methods: {
+        managementURL() {
+            const url = this.serverURL();
+            let fullUrl = [url, 'management'].join('/');
+            return fullUrl.replace(/([^\:])\/\//g, '$1/');
+        },
         server() {
             const url = this.serverURL();
             return url.replace(/^https?:\/\//, '');

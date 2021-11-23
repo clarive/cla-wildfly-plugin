@@ -25,7 +25,7 @@ reg.register('service.wildfly.api', {
         const lwp = require('cla/lwp');
         const { processError } = require('libs.ts');
 
-        const { server, requestBody } = params;
+        const { server, method, requestBody } = params;
         const title = params.meta?.text || 'Wildfly API';
         const errors = params.errors || 'fail';
 
@@ -35,8 +35,7 @@ reg.register('service.wildfly.api', {
             throw new Error('Request body is empty');
         }
 
-        let fullUrl = [wf.serverURL(), 'management'].join('/');
-        fullUrl = fullUrl.replace(/([^\:])\/\//g, '$1/');
+        let fullUrl = wf.managementURL();
 
         // WF uses Digest authentication, we need LWP for that
         var ua = lwp.agent();
@@ -47,7 +46,7 @@ reg.register('service.wildfly.api', {
         try {
             const json = JSON.stringify(JSON.parse(requestBody));
 
-            const res = ua.request('POST', fullUrl, {
+            const res = ua.request(method?.toUpperCase() ?? 'POST', fullUrl, {
                 content_type: 'application/json',
                 content: json
             });
@@ -56,31 +55,15 @@ reg.register('service.wildfly.api', {
                 log.info(`Wildfly: ${_('%1: task finished', title)}`, res);
                 return {
                     success: 1,
-                    status: res.code(),
-                    message: res.message()
-                };
-            } else if (errors === 'return') {
-                log.error(`Wildfly: ${_('%1: task error', title)}`, res);
-                return {
-                    success: 0,
+                    data: JSON.parse(res.content()),
                     status: res.code(),
                     message: res.message()
                 };
             } else {
-                log.error(`Wildfly: ${_('%1: task error', title)}`, res);
-                throw new Error(`Wildfly ERROR: status=${res.code()}`);
+                throw res;
             }
-        } catch (err) {
-            log.error(`Wildfly: ${_('%1: op error', title)}`, err);
-            if (errors === 'return') {
-                return {
-                    success: 0,
-                    status: -1,
-                    message: err + ''
-                };
-            } else {
-                throw new Error(`Wildfly ERROR: ${err}`);
-            }
+        } catch (resErr) {
+            return processError(resErr, errors, title);
         }
     }
 });
@@ -139,7 +122,13 @@ reg.register('service.wildfly.deploy', {
                 });
 
                 if (res2.isSuccess()) {
-                    log.info(`Wildfly: ${_('%1: task finished', title)}: ${res.message()}`, res);
+                    log.info(
+                        `Wildfly: ${_(
+                            '%1: task finished',
+                            title
+                        )}: ${res.message()}`,
+                        res
+                    );
                     return {
                         success: 1,
                         json,
@@ -155,6 +144,209 @@ reg.register('service.wildfly.deploy', {
         } catch (resErr) {
             return processError(resErr, errors, title);
         }
+    }
+});
+
+reg.register('service.wildfly.console', {
+    name: 'WildFly Management Console',
+    icon: '/plugin/cla-wildfly-plugin/icon/wildfly.svg',
+    form: '/plugin/cla-wildfly-plugin/form/wildfly-console-form.js',
+    rulebook,
+    handler: (ctx, params) => {
+        const ci = require('cla/ci');
+        const log = require('cla/log');
+        const reg = require('cla/reg');
+        const lwp = require('cla/lwp');
+        const { processError } = require('libs.ts');
+
+        const title = params.meta?.text || 'Wildfly Console Command';
+        let { server, consoleText, errors } = params;
+        consoleText = consoleText?.trim().replace(/\n+/g, '');
+
+        if (!consoleText) {
+            throw new Error('Invalid console text');
+        }
+
+        const [, ...addresses] = consoleText.split('/');
+        const [last, command] = addresses.pop().split(':');
+        addresses.push(last);
+        let [, operation, opArgs] = command.match(/^(\w+)\((.+)\)$/) ?? [];
+        if (!operation) {
+            operation = command;
+        }
+
+        const address = addresses.map(adr => {
+            const [k, v] = adr.split('=');
+            return { [k]: v };
+        });
+
+        let name, value;
+        if ((name = last.match(/name=(.+)/))) {
+            name = name[1];
+        }
+        if ((value = last.match(/value=(.+)/))) {
+            value = value[1];
+        }
+
+        const wf = ci.load(server);
+
+        let fullUrl = wf.managementURL();
+
+        const ua = lwp.agent();
+        ua.credentials(wf.server(), wf.realm(), wf.username(), wf.password());
+
+        const req = {
+            operation,
+            address,
+            'json.pretty': 1,
+            name,
+            value
+        };
+        const json = JSON.stringify(req);
+
+        console.log(json);
+
+        try {
+            const res = ua.request('POST', fullUrl, {
+                content_type: 'application/json',
+                content: json
+            });
+
+            if (res.isSuccess()) {
+                return {
+                    success: 1,
+                    data: JSON.parse(res.content()),
+                    status: res.code(),
+                    message: res.message()
+                };
+            } else {
+                throw res;
+            }
+        } catch (resErr) {
+            log.debug(json);
+            const res = processError(resErr, errors, title);
+            res.request = req;
+            return res;
+        }
+    }
+});
+
+reg.register('service.wildfly.properties', {
+    name: 'WildFly System Properties',
+    icon: '/plugin/cla-wildfly-plugin/icon/wildfly.svg',
+    form: '/plugin/cla-wildfly-plugin/form/wildfly-properties-form.js',
+    rulebook,
+    handler: (ctx, params) => {
+        const ci = require('cla/ci');
+        const log = require('cla/log');
+        const reg = require('cla/reg');
+        const lwp = require('cla/lwp');
+        const { processError } = require('libs.ts');
+
+        const title = params.meta?.text || 'Wildfly Console Command';
+        let { server, properties, mode, errors } = params;
+
+        const wf = ci.load(server);
+
+        const fullUrl = wf.managementURL();
+
+        const ua = lwp.agent();
+        ua.credentials(wf.server(), wf.realm(), wf.username(), wf.password());
+
+        const output = [];
+        let json: string, req: object;
+
+        for (let { key, value } of properties) {
+            key = key.trim();
+            if (mode == 'delete') {
+                try {
+                    req = {
+                        operation: 'remove',
+                        address: [{ 'system-property': key }]
+                    };
+                    json = JSON.stringify(req);
+
+                    let res = ua.request('POST', fullUrl, {
+                        content_type: 'application/json',
+                        content: json
+                    });
+
+                    if (res.isSuccess()) {
+                        output.push({
+                            success: 1,
+                            key,
+                            status: res.code(),
+                            message: res.message()
+                        });
+                    } else {
+                        throw res;
+                    }
+                } catch (resErr) {
+                    log.debug(json);
+                    const res = processError(resErr, errors, title);
+                    res.request = req;
+                    return res;
+                }
+            } else {
+                try {
+                    req = {
+                        operation: 'write-attribute',
+                        address: [{ 'system-property': key }],
+                        name: 'value',
+                        value
+                    };
+                    json = JSON.stringify(req);
+
+                    let res = ua.request('POST', fullUrl, {
+                        content_type: 'application/json',
+                        content: json
+                    });
+
+                    if (res.isSuccess()) {
+                        output.push({
+                            success: 1,
+                            key,
+                            status: res.code(),
+                            message: res.message()
+                        });
+                    } else {
+                        req = {
+                            operation: 'add',
+                            address: [{ 'system-property': key }],
+                            value
+                        };
+                        json = JSON.stringify(req);
+
+                        res = ua.request('POST', fullUrl, {
+                            content_type: 'application/json',
+                            content: json
+                        });
+
+                        if (res.isSuccess()) {
+                            output.push({
+                                success: 1,
+                                key,
+                                status: res.code(),
+                                message: res.message()
+                            });
+                        } else {
+                            throw res;
+                        }
+                    }
+                } catch (resErr) {
+                    log.debug(json);
+                    const res = processError(resErr, errors, title);
+                    res.request = req;
+                    res.key = key;
+                    return res;
+                }
+            }
+        }
+
+        return {
+            success: 1,
+            output
+        };
     }
 });
 

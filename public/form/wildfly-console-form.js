@@ -11,21 +11,6 @@
         with_vars: 1
     });
 
-    var method = Cla.ui.comboBox({
-        name: 'method',
-        fieldLabel: 'Request Method',
-        data: [
-            ['POST', _('POST')],
-            ['GET', _('GET')],
-            ['PUT', _('PUT')],
-            ['DELETE', _('DELETE')]
-        ],
-        value: params.data.method || 'POST',
-        allowBlank: false,
-        anchor: '100%',
-        singleMode: true
-    });
-
     var errors = Cla.ui.comboBox({
         name: 'errors',
         fieldLabel: 'Error Handling',
@@ -39,18 +24,19 @@
         singleMode: true
     });
 
-    var requestBody = Cla.ui.codeEditor({
-        name: 'requestBody',
-        fieldLabel: _('Request JSON'),
-        value: params.data.requestBody || params.data.config.request_body,
+    var consoleText = Cla.ui.codeEditor({
+        name: 'consoleText',
+        fieldLabel: _('Console Text'),
+        value: params.data.consoleText || params.data.config.console_text,
         height: 300,
         allowBlank: false
     });
 
     var panel = Cla.ui.panel({
         layout: 'form',
-        items: [server, method, errors, requestBody]
+        items: [server, errors, consoleText ]
     });
 
     return panel;
 });
+

@@ -33,10 +33,8 @@
 
     var panel = Cla.ui.panel({
         layout: 'form',
-        items: [server, remoteFile, errors ]
+        items: [server, remoteFile, errors]
     });
 
     return panel;
 });
-
-

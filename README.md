@@ -3,7 +3,7 @@
 <img src="https://cdn.rawgit.com/clarive/cla-wildfly-plugin/master/public/icon/wildfly.svg?sanitize=true" alt="Wildfly Plugin" title="Wildfly Plugin" width="120" height="120">
 
 The WildFly plugin will allow you to interact with the WildFly server when performing and undoing deployments. It is
-compatible with Jboss 7 and later. 
+compatible with Jboss 7 and later.
 
 ## Requirements
 
@@ -14,7 +14,155 @@ There are no requirements outlined in Clarive in order to work with this plugin.
 To install the plugin, rename the top-level folder to `cla-wildfly-plugin` and place it inside the
 `$CLARIVE_BASE/plugins` directory in a Clarive instance.
 
-### WildFly Application Server
+### WildFly Management Rest API
+
+Sends JSON requests to the Wildfly Management rest API. Requires
+that Wildfly Management be available on the server.
+
+- **Method**: either GET, POST or DELETE (PUT is the same as POST
+in Wildfly api). Depends on the request your're making.
+- **Request JSON**: JSON text with the REST request.
+
+Example REST request (POST):
+
+```json
+{ "operation": "read-resource", "address": [{"system-property": "myprop"}] }
+```
+
+To see the result, setup a `Return Key` in the op `Options` panel.
+The data returned into the stash will be something like this:
+
+```yaml
+  data:
+    outcome: success
+    result:
+      value: '123'
+  message: OK
+  status: 200
+  success: 1
+```
+
+```json
+{ "operation": "add", "address": [{"system-property": "myprop"}], "value": "myvalue" }
+```
+
+```json
+{ "operation":"read-attribute", "name":"server-state" }
+```
+
+```json
+{
+"operation":"read-attribute","name":"status","recursive":"true",
+"include-runtime":"true", "address":["deployment","simtx-pagamento-api.war"]
+}
+```
+
+### WildFly Management Console
+
+Sends console requests to the Wildfly Management server by
+parsing the command and converting it into JSON.
+
+We recommend using the `Wildfly Management REST API` whenever
+possible, as all CLI-style commands can be converted into JSON
+requests, but you can try this op in case you don't know
+how to convert a CLI command into JSON.
+
+Example `Console Text`:
+
+```
+/system-property=jtest1:add(value=jvalue)
+```
+
+```
+/subsystem=logging:read-operation-names
+```
+
+Which returns the following into the stash (if a `Return key` was set in the
+`Options` pane):
+
+```yaml
+  data:
+    outcome: success
+    result:
+    - add
+    - list-add
+    - list-clear
+    - list-get
+    - list-log-files
+    - list-remove
+    - map-clear
+    - map-get
+    - map-put
+    - map-remove
+    - query
+    - read-attribute
+    - read-attribute-group
+    - read-attribute-group-names
+    - read-children-names
+    - read-children-resources
+    - read-children-types
+    - read-log-file
+    - read-operation-description
+    - read-operation-names
+    - read-resource
+    - read-resource-description
+    - remove
+    - undefine-attribute
+    - whoami
+    - write-attribute
+  message: OK
+  status: 200
+  success: 1
+```
+
+### WildFly Deploy
+
+Deploys a file to the application server.
+
+- **Local file to deploy** - the path to a file local to the Clarive server
+  process running this rule. Typically the path will be prepended with
+  `${job_dir}/...`.
+
+- **Remote file** (Optional) - the name of the Wildfly remote resource being
+  deployed, ie `myfile.war`.  If omitted, Clarive will use the `Local file to
+  deploy` file+extension part as the remote file.
+
+This op will fail if the remote resource already exists. Undeploy first to be
+sure.
+
+### WildFly Undeploy
+
+Undeploys a file to the application server.
+
+- **Remote file** - the name of the Wildfly remote resource being undeployed,
+  ie `myfile.war`.
+
+This op will fail if the remote resource does not exist.  Set the **Errors**
+mode to "Return..." to prevent failure.
+
+### WildFly System Properties
+
+Add, replace or delete system properties.
+
+- **System properties** - the key and value of each property to be set.
+If deleting, the `value` column is ignored.
+
+- **Mode** - set the mode, `Add or Replace` will add or replace the system
+properties value in the Wildfly server. `Delete` will delete system properties.
+
+To view your server system properties, this is the Wildfly Management URL:
+
+```
+http://mywildlyserver:9990/console/index.html#system-properties
+```
+
+### WildFly Management CLI
+
+Sends predefined commands to the CLI console. Requires
+remote access to the console.
+
+**Note**: this method for Wildfly management is deprecated in favor of the newer
+`Wildfly Management REST API` and `Wildfly Management Console` ops.
 
 The various parameters are:
 
@@ -63,21 +211,21 @@ Configuration start example:
     Path to WildFly script: /wildfly/bin/standalone.sh
     Functions: start
     Configuration File: standalone.xml
-``` 
+```
 
 Due possible delay in starting the WildFly server, it is recommended to add a timeout if you wish to perform a deployment service.
-    
+
 Configuration deployment example:
 
 ```yaml
     Server CI: GenericServer
     Path to WildFly script: /wildfly/bin/jboss-cli.sh
     Functions: deploy
-    Credentials: 
+    Credentials:
         username: user
         password: *********
     File path to deploy: /path/to/example.war
-``` 
+```
 
 ### In Clarive SE
 

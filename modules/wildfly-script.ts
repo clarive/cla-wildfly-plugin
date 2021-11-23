@@ -3,7 +3,7 @@ declare var require;
 var reg = require('cla/reg');
 
 reg.register('service.wildfly.server', {
-    name: 'WildFly Management Console',
+    name: 'WildFly Management CLI',
     icon: '/plugin/cla-wildfly-plugin/icon/wildfly.svg',
     form: '/plugin/cla-wildfly-plugin/form/wildfly-form.js',
     rulebook: {
