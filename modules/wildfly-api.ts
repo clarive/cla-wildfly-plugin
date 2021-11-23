@@ -272,6 +272,7 @@ reg.register('service.wildfly.properties', {
                     });
 
                     if (res.isSuccess()) {
+                        log.info(`Deleted system property ${key} at ${fullUrl}`);
                         output.push({
                             success: 1,
                             key,
@@ -303,6 +304,7 @@ reg.register('service.wildfly.properties', {
                     });
 
                     if (res.isSuccess()) {
+                        log.info(`Replaced system property ${key} at ${fullUrl}`);
                         output.push({
                             success: 1,
                             key,
@@ -323,6 +325,7 @@ reg.register('service.wildfly.properties', {
                         });
 
                         if (res.isSuccess()) {
+                            log.info(`Added system property ${key} at ${fullUrl}`);
                             output.push({
                                 success: 1,
                                 key,
