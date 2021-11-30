@@ -140,6 +140,27 @@ Undeploys a file to the application server.
 This op will fail if the remote resource does not exist.  Set the **Errors**
 mode to "Return..." to prevent failure.
 
+### WildFly Download
+
+Downloads a resource from Wildfly to a local file. Wildfly resources
+will typically be deployed .war or .ear files, but it can be any resource
+Wildfly enables to be downloaded: server logs, xml files, etc.
+
+- **Remote file** - name of the Wildfly remote resource being
+  downloaded, ie `myfile.war`.
+
+- **Resource type** - for deployed files (war, ear) this should be `deployment`,
+  but for other types of resources, it will need to be set accordingly, such
+  as `logging` for log files. This depends on the Wildfly resource address/path,
+  check your Wildfly docs for more info.
+
+- **Local file** - the path to a file local to the Clarive server
+  where the remote file will be written. Typically the path will be prepended with
+  `${job_dir}/...`.
+
+This op will fail if the remote resource does not exist.  Set the **Errors**
+mode to "Return..." to prevent failure.
+
 ### WildFly System Properties
 
 Add, replace or delete system properties.
